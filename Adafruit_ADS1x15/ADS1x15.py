@@ -129,6 +129,13 @@ class ADS1x15(object):
         # Wait for the ADC sample to finish based on the sample rate plus a
         # small offset to be sure (0.1 millisecond).
         time.sleep(1.0/data_rate+0.0001)
+        # Check for conversion to actually have completed, on some chips it takes longer
+        while (True):
+            state = self._device.readList(ADS1x15_POINTER_CONFIG, 2)
+            state = (state[0] << 8) | state[1]
+            if state & ADS1x15_CONFIG_OS_SINGLE != 0:
+                break
+            time.sleep(0.0001)
         # Retrieve the result.
         result = self._device.readList(ADS1x15_POINTER_CONVERSION, 2)
         return self._conversion_value(result[1], result[0])
